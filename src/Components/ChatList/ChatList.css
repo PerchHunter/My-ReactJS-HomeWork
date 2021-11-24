@@ -1,0 +1,15 @@
+.chatList {
+  width: 100%;
+  background-color: whitesmoke;
+  display: flex;
+  flex-direction: column;
+  padding-left: 30px;
+}
+
+.MuiListItemText-root {
+  margin-left: 15px;
+}
+
+.MuiList-root {
+  height: 100%;
+}
