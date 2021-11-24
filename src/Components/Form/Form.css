@@ -1,0 +1,19 @@
+#submit-message {
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+}
+
+.textarea-chat {
+  width: 70%;
+  border-radius: 10px;
+  height: 55px;
+  background-color: whitesmoke;
+}
+
+.button-chat {
+  width: 25%;
+  background-color: whitesmoke;
+  border-radius: 10px;
+  cursor: pointer;
+}
