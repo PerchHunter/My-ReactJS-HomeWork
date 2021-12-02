@@ -1,0 +1,1 @@
+export const CHECK_NAME_ACTION = "CHECK_NAME_ACTION";
