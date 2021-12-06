@@ -1,0 +1,10 @@
+.reactRouterLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+#simple-tabpanel-0,
+#simple-tabpanel-1,
+#simple-tabpanel-2 {
+  display: none;
+}
