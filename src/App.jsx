@@ -1,79 +1,131 @@
-import faker from "faker";
+import React, { useEffect, useState } from "react";
+import { Provider } from "react-redux";
+import { BrowserRouter, Switch, Route, Redirect, Link } from "react-router-dom";
+import { PersistGate } from "redux-persist/integration/react";
+import { Fragment } from "react";
+import { Alert, Button, LinearProgress, Box } from "@mui/material";
 
+import { Menu } from "./Components/Menu";
+import { Profile } from "./Components/Application_Pages/Profile";
+import { Home } from "./Components/Application_Pages/Home";
+import { Chats } from "./Components/Application_Pages/Chats";
+import { Cats } from "./Components/Application_Pages/Cats/index";
+import { ROUTES } from "./constants.js";
+import { persistor, store } from "./Components/Store";
 import "./App.css";
 import logo from "./logo.svg";
-import { MessageField } from "./Components/MessageField";
-import { Form } from "./Components/Form";
+import { ChatListContainer } from "./Components/Application_Pages/Chats/ChatList";
+import { AddChatContainer } from "./Components/Application_Pages/Chats/AddChat";
+import { Auth } from "./Components/Auth";
+import { PrivateRoute } from "./Components/PrivateRoute";
+import { PublicRoute } from "./Components/PublicRoute";
 
-import { useState, useEffect } from "react";
+import firebase from "firebase/app";
 
 function App() {
-  const [messageList, setMessageList] = useState([]);
-  const [message, setMessage] = useState({
-    text: "",
-    author: "",
-    date: "",
-    id: "",
-  });
+  const [auth, setAuth] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const createMessage = (e) => {
-    setMessage({
-      text: e.target.value,
-      author: "Me",
-      date: new Date().toLocaleTimeString(),
-      id: faker.datatype.uuid(),
-    });
-  };
-
-  const addMessage = () => {
-    setMessageList([...messageList, message]);
-    setMessage({
-      text: "",
-      author: "",
-      date: "",
-      id: "",
+  const handleInitFirebaseAuth = async () => {
+    await firebase.auth().onAuthStateChanged((user) => {
+      user ? setAuth(true) : setAuth(false);
+      setLoading(false);
     });
   };
 
   useEffect(() => {
-    const botsResponse = {
-      text: "Lorem ipsum dolor, sit amet consectetur adipisicing elit.",
-      author: "BOT",
-      date: new Date().toLocaleTimeString(),
-      id: faker.datatype.uuid(),
-    };
+    handleInitFirebaseAuth();
+  }, []);
 
-    if (
-      messageList.length &&
-      messageList[messageList.length - 1].author !== "BOT"
-    ) {
-      let timer;
-      timer = setTimeout(() => {
-        setMessageList([...messageList, botsResponse]);
-      }, 1300);
-      return () => {
-        clearTimeout(timer);
-      };
-    }
-  }, [messageList]);
+  if (loading) {
+    return (
+      <Box sx={{ width: "100%" }}>
+        <LinearProgress />
+      </Box>
+    );
+  }
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="logo" alt="logo" />
-      </header>
-      <main className="App-main">
-        <div className="chat">
-          <MessageField messageList={messageList} />
-          <Form
-            messageList={messageList}
-            message={message}
-            createMessage={createMessage}
-            addMessage={addMessage}
-          />
-        </div>
-      </main>
-    </div>
+    <Provider store={store}>
+      <PersistGate loading={""} persistor={persistor}>
+        <BrowserRouter>
+          <div className="App">
+            <header className="App-header">
+              <div className="header-logo">
+                <img src={logo} className="logo" alt="logo" />
+              </div>
+              <div className="header-link">
+                <Link to={ROUTES.SIGN_IN}>
+                  <Button variant="outlined" size="medium">
+                    Войти
+                  </Button>
+                </Link>
+                <Link to={`${ROUTES.SIGN_IN}/sign-up`}>
+                  <Button variant="outlined" size="medium">
+                    Зарегистрироваться
+                  </Button>
+                </Link>
+              </div>
+            </header>
+            <main className="App-main">
+              <Menu />
+
+              <Switch>
+                <Route
+                  exact
+                  auth={auth}
+                  path={ROUTES.HOME}
+                  render={() => <Home />}
+                />
+                <PrivateRoute
+                  exact
+                  auth={auth}
+                  path={ROUTES.PROFILE}
+                  render={() => <Profile />}
+                />
+                <PrivateRoute
+                  auth={auth}
+                  path={ROUTES.CHAT}
+                  render={() => <Chats />}
+                />
+                <PrivateRoute
+                  exact
+                  auth={auth}
+                  path={ROUTES.CATS}
+                  render={() => <Cats />}
+                />
+                <PublicRoute
+                  auth={auth}
+                  path={ROUTES.SIGN_UP}
+                  render={() => <Auth />}
+                />
+                <PrivateRoute
+                  auth={auth}
+                  path={ROUTES.NO_CHAT}
+                  render={() => (
+                    <Fragment>
+                      <Alert severity="info" color="info">
+                        Такого чата не существует. Выберите нужный чат из списка
+                        или добавьте новый
+                      </Alert>
+                      <ChatListContainer />
+                      <AddChatContainer />
+                    </Fragment>
+                  )}
+                />
+                <Route
+                  path={ROUTES.NOT_FOUND}
+                  render={() => <h1>404 Страница не найдена</h1>}
+                />
+                <Route>
+                  <Redirect to={ROUTES.NOT_FOUND}></Redirect>
+                </Route>
+              </Switch>
+            </main>
+          </div>
+        </BrowserRouter>
+      </PersistGate>
+    </Provider>
   );
 }
 
